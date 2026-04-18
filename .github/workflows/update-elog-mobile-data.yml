@@ -1,0 +1,38 @@
+name: Update (e)log Mobile Data
+
+on:
+  schedule:
+    - cron: "5 * * * *" # every hour at xx:05 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate dashboard data
+        run: |
+          python3 "elog-mobile/fetch_endoh_dashboard.py" > "elog-mobile/data/dashboard.json"
+
+      - name: Commit and push when changed
+        run: |
+          if git diff --quiet -- "elog-mobile/data/dashboard.json"; then
+            echo "No changes"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "elog-mobile/data/dashboard.json"
+          git commit -m "chore: update (e)log mobile data"
+          git push

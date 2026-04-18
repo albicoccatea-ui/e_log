@@ -1,0 +1,1566 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#f5f5f7" />
+  <title>(e)log Mobile</title>
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --card: #ffffff;
+      --text: #1d1d1f;
+      --sub: #6f6f74;
+      --line: #ececef;
+      --accent: #f97316;
+      --ok: #0f7a47;
+      --ok-bg: rgba(27, 162, 96, 0.14);
+      --warn: #b42318;
+      --warn-bg: rgba(237, 71, 71, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(170deg, #f5f5f7 0%, #fff8f2 48%, #ffffff 100%);
+      color: var(--text);
+      font-family: "Avenir Next", "SUIT Variable", "Apple SD Gothic Neo", -apple-system, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      padding: calc(env(safe-area-inset-top) + 16px) 14px calc(env(safe-area-inset-bottom) + 20px);
+    }
+
+    .app {
+      max-width: 430px;
+      margin: 0 auto;
+      display: grid;
+      gap: 10px;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(29, 29, 31, 0.08);
+      border-radius: 16px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
+      backdrop-filter: blur(8px);
+      overflow: hidden;
+    }
+
+    .section {
+      padding: 12px;
+    }
+
+    .header-image-wrap {
+      height: 150px;
+      border-bottom: 1px solid rgba(249, 115, 22, 0.2);
+      background: linear-gradient(120deg, #fff7ef, #fff2e1 55%, #ffe9d6);
+      overflow: hidden;
+    }
+
+    .header-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center center;
+      display: block;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: -0.2px;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: var(--sub);
+      background: #fff;
+      white-space: nowrap;
+    }
+
+    .meta {
+      margin: 0;
+      font-size: 12px;
+      color: #5a5a60;
+      line-height: 1.45;
+    }
+
+    .refresh-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .action-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .refresh-btn,
+    .sub-btn,
+    .action-btn {
+      border: 0;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 9px 12px;
+      cursor: pointer;
+      line-height: 1.2;
+    }
+
+    .refresh-btn,
+    .action-btn.primary {
+      background: linear-gradient(90deg, #ff7a18, #ff9736);
+      color: #fff;
+    }
+
+    .sub-btn,
+    .action-btn.secondary {
+      border: 1px solid #e6e7eb;
+      background: #fff;
+      color: #565b63;
+      padding: 8px 10px;
+      font-size: 12px;
+    }
+
+    .action-btn.warn {
+      border: 1px solid #f3cccc;
+      background: #fff4f3;
+      color: #b42318;
+      padding: 8px 10px;
+      font-size: 12px;
+    }
+
+    .refresh-btn[disabled],
+    .sub-btn[disabled],
+    .action-btn[disabled] {
+      opacity: 0.55;
+      cursor: wait;
+    }
+
+    .refresh-state {
+      margin: 0;
+      font-size: 11px;
+      color: var(--sub);
+      text-align: right;
+      flex: 1;
+    }
+
+    .tab-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .tab-btn {
+      border: 1px solid #ececf1;
+      border-radius: 10px;
+      background: #fff;
+      color: #565b63;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      border-color: rgba(249, 115, 22, 0.38);
+      background: linear-gradient(120deg, #fff7ef, #fff2e8);
+      color: #7a4e25;
+    }
+
+    .page {
+      display: grid;
+      gap: 10px;
+    }
+
+    .card {
+      border: 1px solid rgba(249, 115, 22, 0.24);
+      background: linear-gradient(145deg, #fff6ec, #ffffff);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .card-title {
+      margin: 0 0 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #6a4b2c;
+    }
+
+    .dday-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .dday-label {
+      width: 44px;
+      flex-shrink: 0;
+      font-size: 12px;
+      color: #8a6b47;
+    }
+
+    .dday-value {
+      margin: 0;
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .dday-number {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -1.1px;
+      line-height: 1.1;
+    }
+
+    .hint {
+      margin: 6px 0 0;
+      font-size: 11px;
+      color: #8a8a92;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      height: 16px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 800;
+      color: #fff;
+      background: linear-gradient(90deg, #ff7a18, #ff9736);
+      padding: 0 6px;
+      letter-spacing: 0.2px;
+      vertical-align: middle;
+    }
+
+    .selector-card,
+    .source-card,
+    .journal-card {
+      border: 1px solid rgba(29, 29, 31, 0.08);
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .selector-list,
+    .item-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .selector-list {
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .selector-item,
+    .item {
+      border-top: 1px dashed var(--line);
+      margin-top: 8px;
+      padding-top: 8px;
+    }
+
+    .selector-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .selector-title-row,
+    .item-title-line,
+    .journal-title-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      line-height: 1.4;
+      font-size: 12px;
+    }
+
+    .date-row,
+    .journal-meta {
+      margin-top: 3px;
+      font-size: 11px;
+      color: #8a8a92;
+      line-height: 1.45;
+    }
+
+    .source-card {
+      padding: 9px 12px;
+    }
+
+    .source-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+    }
+
+    .source-summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .source-name {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .source-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status {
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+    }
+
+    .status.ok {
+      color: var(--ok);
+      background: var(--ok-bg);
+    }
+
+    .status.error {
+      color: var(--warn);
+      background: var(--warn-bg);
+    }
+
+    .source-body {
+      margin-top: 8px;
+    }
+
+    .item-link,
+    .related-link,
+    .journal-link {
+      text-decoration: none;
+      color: var(--text);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .related-link {
+      color: #1f6feb;
+      font-size: 11px;
+    }
+
+    .item-link:hover,
+    .related-link:hover,
+    .journal-link:hover {
+      text-decoration: underline;
+    }
+
+    .related {
+      margin-top: 7px;
+      font-size: 11px;
+      color: #5f6368;
+      line-height: 1.45;
+    }
+
+    .journal-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .memo-wrap {
+      margin-top: 8px;
+    }
+
+    .memo-label {
+      display: block;
+      font-size: 11px;
+      color: #7a7f88;
+      margin-bottom: 4px;
+    }
+
+    .memo-textarea {
+      width: 100%;
+      min-height: 78px;
+      resize: vertical;
+      border: 1px solid #e6e7eb;
+      border-radius: 10px;
+      padding: 8px;
+      font: inherit;
+      font-size: 12px;
+      color: #1d1d1f;
+      background: #fff;
+      line-height: 1.4;
+    }
+
+    .memo-status {
+      margin: 4px 0 0;
+      font-size: 10px;
+      color: #8f939a;
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .empty,
+    .error-text {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .empty {
+      color: #86868b;
+    }
+
+    .error-text {
+      color: #9f3b36;
+    }
+
+    .global-error {
+      border: 1px solid #f7c4bf;
+      background: #fff3f2;
+      color: #8f1f13;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="panel">
+      <div class="header-image-wrap">
+        <img id="header-image" class="header-image" src="./header_image.jpg" alt="(e)log header" />
+      </div>
+
+      <div class="section">
+        <div class="top-row">
+          <h1 class="title">(e)log mobile</h1>
+          <span class="pill">1시간 자동</span>
+        </div>
+
+        <p id="meta-updated" class="meta">최근 수집: -</p>
+        <p id="meta-fetched" class="meta">앱 마지막 동기화: -</p>
+        <p id="meta-next" class="meta">다음 자동 갱신 예정: -</p>
+        <p id="meta-notify" class="meta">알림 상태: 미설정</p>
+
+        <div class="refresh-row">
+          <div class="action-group">
+            <button id="refresh-btn" class="refresh-btn" type="button">지금 갱신</button>
+            <button id="notify-btn" class="sub-btn" type="button">알림 허용</button>
+          </div>
+          <p id="refresh-state" class="refresh-state">준비됨</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="selector-card">
+      <div class="tab-row">
+        <button id="tab-dashboard" class="tab-btn active" data-tab="dashboard" type="button">대시보드</button>
+        <button id="tab-selected" class="tab-btn" data-tab="selected" type="button">참여 일정</button>
+        <button id="tab-visited" class="tab-btn" data-tab="visited" type="button">다녀온 일정</button>
+      </div>
+    </section>
+
+    <section id="global-error" class="global-error hidden"></section>
+
+    <div id="page-dashboard" class="page">
+      <section class="card" id="dday-card">
+        <h2 class="card-title">⏳ 참석 일정 D-day</h2>
+
+        <p id="dday-empty" class="empty">아래 일정에서 참석할 행사를 선택해 주세요.</p>
+
+        <div id="dday-content" class="hidden">
+          <div class="dday-row">
+            <div class="dday-label">행사명</div>
+            <p class="dday-value"><span id="dday-title">-</span> <span id="dday-badge" class="badge hidden">NEW</span></p>
+          </div>
+          <div class="dday-row">
+            <div class="dday-label">날짜</div>
+            <p id="dday-date" class="dday-value">-</p>
+          </div>
+          <div class="dday-row">
+            <div class="dday-label">장소</div>
+            <p id="dday-location" class="dday-value">-</p>
+          </div>
+          <div class="dday-row">
+            <div class="dday-label">디데이</div>
+            <p id="dday-value" class="dday-number">-</p>
+          </div>
+          <div id="dday-related" class="related hidden">
+            추가정보:
+            <a id="dday-related-link" class="related-link" href="#" target="_blank" rel="noreferrer"></a>
+          </div>
+          <p class="hint">여러 개를 선택하면 가장 가까운 일정의 D-day를 보여드립니다.</p>
+        </div>
+      </section>
+
+      <section class="selector-card">
+        <h2 class="card-title">✅ 참석 일정 선택</h2>
+        <p class="hint" style="margin-top:0">체크한 일정은 참여 일정 페이지에 모아서 볼 수 있습니다.</p>
+        <p id="schedule-empty" class="empty hidden">표시 가능한 일정이 없습니다.</p>
+        <ul id="schedule-list" class="selector-list"></ul>
+      </section>
+
+      <section id="sources-container" style="display:grid; gap:10px;"></section>
+    </div>
+
+    <div id="page-selected" class="page hidden">
+      <section class="selector-card">
+        <h2 class="card-title">🗂️ 참여할 일정 모아보기</h2>
+        <p class="hint" style="margin-top:0">체크한 일정만 표시됩니다. 메모는 자동 저장됩니다.</p>
+        <p id="selected-empty" class="empty hidden">체크한 일정이 없습니다.</p>
+        <div id="selected-list" class="journal-list"></div>
+      </section>
+    </div>
+
+    <div id="page-visited" class="page hidden">
+      <section class="selector-card">
+        <h2 class="card-title">📔 다녀온 일정 기록</h2>
+        <p class="hint" style="margin-top:0">참여 일정에서 다녀옴으로 이동한 항목입니다. 복기 메모를 남길 수 있습니다.</p>
+        <p id="visited-empty" class="empty hidden">아직 기록된 다녀온 일정이 없습니다.</p>
+        <div id="visited-list" class="journal-list"></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const CONFIG = {
+      DATA_URL: "./data/dashboard.json",
+      AUTO_REFRESH_MS: 60 * 60 * 1000,
+      AUTO_REFRESH_CHECK_MS: 60 * 1000,
+      MAX_ITEMS_PER_SOURCE: 6,
+      HEADER_FALLBACK: "https://endoh-masaaki.com/wp-content/themes/enchannel2017renew/assets/images/common/enchannel_logo.png",
+      NOTIFY_ICON: "./header_image.jpg"
+    };
+
+    const KEYS = {
+      CACHE_DATA: "elogMobile.cacheData.v1",
+      LAST_FETCHED_AT: "elogMobile.lastFetchedAt.v1",
+      SELECTED_EVENT_IDS: "elogMobile.selectedEventIds.v1",
+      SOURCE_LATEST_MAP: "elogMobile.sourceLatestMap.v1",
+      EVENT_MEMO_MAP: "elogMobile.eventMemoMap.v1",
+      ATTENDED_LOG_MAP: "elogMobile.attendedLogMap.v1"
+    };
+
+    const CALENDAR_SOURCE_IDS = new Set(["calendar_endoh", "calendar_jam"]);
+
+    const state = {
+      data: null,
+      sourceUpdateMap: {},
+      scheduleEvents: [],
+      selectedEventIds: [],
+      activeTab: "dashboard",
+      isLoading: false,
+      autoTimerId: null
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function loadJson(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return fallback;
+        const parsed = JSON.parse(raw);
+        return parsed ?? fallback;
+      } catch (error) {
+        return fallback;
+      }
+    }
+
+    function saveJson(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (error) {
+        // ignore storage errors
+      }
+    }
+
+    function loadLastFetchedAt() {
+      const raw = localStorage.getItem(KEYS.LAST_FETCHED_AT);
+      if (!raw) return 0;
+      const value = Number(raw);
+      return Number.isFinite(value) ? value : 0;
+    }
+
+    function saveLastFetchedAt(ts) {
+      localStorage.setItem(KEYS.LAST_FETCHED_AT, String(ts));
+    }
+
+    function formatLocalDateTime(ts) {
+      if (!ts) return "-";
+      const date = new Date(ts);
+      if (Number.isNaN(date.getTime())) return "-";
+      return date.toLocaleString("ko-KR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function getDayStart(date) {
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    }
+
+    function parseEventDate(event) {
+      if (event.event_at) {
+        const parsed = new Date(event.event_at);
+        if (!Number.isNaN(parsed.getTime())) return parsed;
+      }
+      const match = String(event.date || "").match(/(\d{4}-\d{2}-\d{2})(?:\s+(\d{2}:\d{2}))?/);
+      if (match) {
+        const timePart = match[2] || "00:00";
+        const parsed = new Date(`${match[1]}T${timePart}:00+09:00`);
+        if (!Number.isNaN(parsed.getTime())) return parsed;
+      }
+      return null;
+    }
+
+    function inferLocationFromTitle(title) {
+      const value = String(title || "");
+      const atMatch = value.match(/[＠@]\s*([^【】「」\[\]（）()|]+)$/);
+      if (atMatch && atMatch[1]) return atMatch[1].trim();
+
+      const inMatch = value.match(/\bin\s+([^\-|【】「」\[\]（）()]+)/i);
+      if (inMatch && inMatch[1]) return inMatch[1].replace(/\bvol\.?\s*\d+.*/i, "").trim();
+      return "";
+    }
+
+    function getDdayText(date) {
+      const today = new Date();
+      const todayStart = getDayStart(today);
+      const targetStart = getDayStart(date);
+      const diffDays = Math.round((targetStart - todayStart) / 86400000);
+      if (diffDays > 0) return `D-${diffDays}`;
+      if (diffDays === 0) return "D-DAY";
+      return `D+${Math.abs(diffDays)}`;
+    }
+
+    function getSourceEmoji(sourceId) {
+      const map = {
+        official_news: "📰",
+        official_blog: "✍️",
+        calendar_endoh: "🗓️",
+        calendar_jam: "🎤",
+        youtube: "📺",
+        highway_news: "🚀",
+        fanclub_news: "💌",
+        jam_feed: "🎸",
+        google_news: "🔎"
+      };
+      return map[sourceId] || "📦";
+    }
+
+    function safeItems(items) {
+      if (!Array.isArray(items)) return [];
+      return items.slice(0, CONFIG.MAX_ITEMS_PER_SOURCE);
+    }
+
+    function getSourceLatestKey(source) {
+      if (!source || source.status !== "ok") return "";
+      const items = Array.isArray(source.items) ? source.items : [];
+      if (!items.length) return "";
+      const latest = items[0];
+      return `${latest.title || ""}|${latest.date || ""}|${latest.link || ""}`;
+    }
+
+    function buildSourceUpdateMap(sources) {
+      const previousMap = loadJson(KEYS.SOURCE_LATEST_MAP, {});
+      const nextMap = {};
+      const updateMap = {};
+
+      sources.forEach((source) => {
+        const latestKey = getSourceLatestKey(source);
+        nextMap[source.id] = latestKey;
+        updateMap[source.id] = Boolean(previousMap[source.id]) && Boolean(latestKey) && previousMap[source.id] !== latestKey;
+      });
+
+      saveJson(KEYS.SOURCE_LATEST_MAP, nextMap);
+      return updateMap;
+    }
+
+    function extractScheduleEvents(sources) {
+      const events = [];
+      sources.forEach((source) => {
+        if (!CALENDAR_SOURCE_IDS.has(source.id) || source.status !== "ok") return;
+        (source.items || []).forEach((item, index) => {
+          const parsedDate = parseEventDate(item);
+          const location = String(item.location || "").trim() || inferLocationFromTitle(item.title || "");
+          const eventId = item.event_id || `${source.id}-${index}-${item.title || "event"}`;
+          events.push({
+            eventId,
+            title: item.title || "(제목 없음)",
+            date: item.date || "날짜 정보 없음",
+            location,
+            event_at: item.event_at || "",
+            link: item.link || source.url || "",
+            sourceName: source.name || "",
+            sourceId: source.id,
+            hasUpdate: Boolean(item.has_update),
+            related: Array.isArray(item.related) ? item.related : [],
+            parsedDate
+          });
+        });
+      });
+
+      events.sort((a, b) => {
+        if (!a.parsedDate && !b.parsedDate) return 0;
+        if (!a.parsedDate) return 1;
+        if (!b.parsedDate) return -1;
+        return a.parsedDate.getTime() - b.parsedDate.getTime();
+      });
+
+      return events;
+    }
+
+    function loadSelectedEventIds() {
+      const parsed = loadJson(KEYS.SELECTED_EVENT_IDS, []);
+      return Array.isArray(parsed) ? parsed : [];
+    }
+
+    function saveSelectedEventIds(ids) {
+      saveJson(KEYS.SELECTED_EVENT_IDS, ids);
+    }
+
+    function getValidSelectedEventIds(events) {
+      const loaded = loadSelectedEventIds();
+      const valid = loaded.filter((id) => events.some((event) => event.eventId === id));
+      if (loaded.length !== valid.length) saveSelectedEventIds(valid);
+      return valid;
+    }
+
+    function loadEventMemoMap() {
+      const parsed = loadJson(KEYS.EVENT_MEMO_MAP, {});
+      return parsed && typeof parsed === "object" ? parsed : {};
+    }
+
+    function saveEventMemo(eventId, value) {
+      const map = loadEventMemoMap();
+      map[eventId] = value;
+      saveJson(KEYS.EVENT_MEMO_MAP, map);
+    }
+
+    function getEventMemo(eventId) {
+      const map = loadEventMemoMap();
+      return String(map[eventId] || "");
+    }
+
+    function loadAttendedLogMap() {
+      const parsed = loadJson(KEYS.ATTENDED_LOG_MAP, {});
+      return parsed && typeof parsed === "object" ? parsed : {};
+    }
+
+    function saveAttendedLogMap(map) {
+      saveJson(KEYS.ATTENDED_LOG_MAP, map);
+    }
+
+    function upsertAttendedEvent(event, memoText) {
+      const map = loadAttendedLogMap();
+      const nowIso = new Date().toISOString();
+      const prev = map[event.eventId] || {};
+      map[event.eventId] = {
+        eventId: event.eventId,
+        title: event.title,
+        date: event.date,
+        location: event.location || "",
+        sourceName: event.sourceName || "",
+        link: event.link || "",
+        visitedAt: prev.visitedAt || nowIso,
+        memo: memoText,
+        updatedAt: nowIso
+      };
+      saveAttendedLogMap(map);
+    }
+
+    function updateAttendedMemo(eventId, memoText) {
+      const map = loadAttendedLogMap();
+      if (!map[eventId]) return;
+      map[eventId].memo = memoText;
+      map[eventId].updatedAt = new Date().toISOString();
+      saveAttendedLogMap(map);
+    }
+
+    function removeAttendedEvent(eventId) {
+      const map = loadAttendedLogMap();
+      delete map[eventId];
+      saveAttendedLogMap(map);
+    }
+
+    function pickNearestEvent(selectedEvents) {
+      if (!selectedEvents.length) return null;
+
+      const todayStart = getDayStart(new Date());
+
+      const upcoming = selectedEvents
+        .filter((event) => event.parsedDate)
+        .filter((event) => getDayStart(event.parsedDate).getTime() >= todayStart.getTime())
+        .sort((a, b) => a.parsedDate.getTime() - b.parsedDate.getTime());
+
+      if (upcoming.length > 0) return upcoming[0];
+
+      const dated = selectedEvents
+        .filter((event) => event.parsedDate)
+        .sort((a, b) => b.parsedDate.getTime() - a.parsedDate.getTime());
+
+      return dated[0] || selectedEvents[0];
+    }
+
+    function setRefreshState(message, type = "idle") {
+      const el = $("refresh-state");
+      el.textContent = message;
+      if (type === "error") {
+        el.style.color = "#b42318";
+      } else if (type === "ok") {
+        el.style.color = "#0f7a47";
+      } else {
+        el.style.color = "#6f6f74";
+      }
+    }
+
+    function setLoading(loading) {
+      state.isLoading = loading;
+      const button = $("refresh-btn");
+      button.disabled = loading;
+      button.textContent = loading ? "갱신 중..." : "지금 갱신";
+    }
+
+    function isNotificationSupported() {
+      return typeof window !== "undefined" && "Notification" in window;
+    }
+
+    function updateNotificationUi() {
+      const notifyButton = $("notify-btn");
+      const notifyMeta = $("meta-notify");
+
+      if (!isNotificationSupported()) {
+        notifyButton.disabled = true;
+        notifyButton.textContent = "알림 미지원";
+        notifyMeta.textContent = "알림 상태: 이 브라우저에서 미지원";
+        return;
+      }
+
+      const permission = Notification.permission;
+      if (permission === "granted") {
+        notifyButton.disabled = true;
+        notifyButton.textContent = "알림 허용됨";
+        notifyMeta.textContent = "알림 상태: 허용됨";
+      } else if (permission === "denied") {
+        notifyButton.disabled = true;
+        notifyButton.textContent = "알림 차단됨";
+        notifyMeta.textContent = "알림 상태: 차단됨 (브라우저 설정에서 변경)";
+      } else {
+        notifyButton.disabled = false;
+        notifyButton.textContent = "알림 허용";
+        notifyMeta.textContent = "알림 상태: 미설정";
+      }
+    }
+
+    async function requestNotificationPermission() {
+      if (!isNotificationSupported()) return;
+      try {
+        const permission = await Notification.requestPermission();
+        updateNotificationUi();
+        if (permission === "granted") {
+          setRefreshState("업데이트 알림이 허용되었습니다.", "ok");
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    function notifyIfNeeded(sourceNames) {
+      if (!Array.isArray(sourceNames) || sourceNames.length === 0) return;
+      if (!isNotificationSupported()) return;
+      if (Notification.permission !== "granted") return;
+
+      const preview = sourceNames.slice(0, 2).join(", ");
+      const more = sourceNames.length > 2 ? ` 외 ${sourceNames.length - 2}개` : "";
+
+      try {
+        new Notification("(e)log 새 업데이트", {
+          body: `${preview}${more} 소스에 새 항목이 있습니다.`,
+          icon: CONFIG.NOTIFY_ICON,
+          tag: "elog-update"
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    function renderMeta(data) {
+      const fetchedAt = loadLastFetchedAt();
+      $("meta-updated").textContent = `최근 수집: ${data.updated_at || "-"}`;
+      $("meta-fetched").textContent = `앱 마지막 동기화: ${formatLocalDateTime(fetchedAt)}`;
+
+      if (!fetchedAt) {
+        $("meta-next").textContent = "다음 자동 갱신 예정: 첫 동기화 후 계산";
+      } else {
+        const next = fetchedAt + CONFIG.AUTO_REFRESH_MS;
+        $("meta-next").textContent = `다음 자동 갱신 예정: ${formatLocalDateTime(next)}`;
+      }
+    }
+
+    function updateNextRefreshMeta() {
+      const fetchedAt = loadLastFetchedAt();
+      if (!fetchedAt) {
+        $("meta-next").textContent = "다음 자동 갱신 예정: 첫 동기화 후 계산";
+        return;
+      }
+      const next = fetchedAt + CONFIG.AUTO_REFRESH_MS;
+      $("meta-next").textContent = `다음 자동 갱신 예정: ${formatLocalDateTime(next)}`;
+    }
+
+    function renderDday(nearestEvent) {
+      const emptyEl = $("dday-empty");
+      const contentEl = $("dday-content");
+      const badgeEl = $("dday-badge");
+      const relatedWrap = $("dday-related");
+      const relatedLink = $("dday-related-link");
+
+      if (!nearestEvent) {
+        emptyEl.classList.remove("hidden");
+        contentEl.classList.add("hidden");
+        return;
+      }
+
+      emptyEl.classList.add("hidden");
+      contentEl.classList.remove("hidden");
+      $("dday-title").textContent = nearestEvent.title || "-";
+      $("dday-date").textContent = nearestEvent.date || "-";
+      $("dday-location").textContent = nearestEvent.location || "장소 미정";
+      $("dday-value").textContent = nearestEvent.parsedDate ? getDdayText(nearestEvent.parsedDate) : "-";
+
+      if (nearestEvent.hasUpdate) {
+        badgeEl.classList.remove("hidden");
+      } else {
+        badgeEl.classList.add("hidden");
+      }
+
+      const related = nearestEvent.related && nearestEvent.related.length > 0 ? nearestEvent.related[0] : null;
+      if (related && related.link) {
+        relatedWrap.classList.remove("hidden");
+        relatedLink.href = related.link;
+        relatedLink.textContent = related.title || "관련 정보 보기";
+      } else {
+        relatedWrap.classList.add("hidden");
+        relatedLink.href = "#";
+        relatedLink.textContent = "";
+      }
+    }
+
+    function renderSelectedPage() {
+      const selectedListEl = $("selected-list");
+      const selectedEmptyEl = $("selected-empty");
+      selectedListEl.innerHTML = "";
+
+      const attendedMap = loadAttendedLogMap();
+      const selectedEvents = state.scheduleEvents
+        .filter((event) => state.selectedEventIds.includes(event.eventId))
+        .sort((a, b) => {
+          if (!a.parsedDate && !b.parsedDate) return 0;
+          if (!a.parsedDate) return 1;
+          if (!b.parsedDate) return -1;
+          return a.parsedDate.getTime() - b.parsedDate.getTime();
+        });
+
+      if (!selectedEvents.length) {
+        selectedEmptyEl.classList.remove("hidden");
+        return;
+      }
+
+      selectedEmptyEl.classList.add("hidden");
+
+      selectedEvents.forEach((event) => {
+        const card = document.createElement("article");
+        card.className = "journal-card";
+
+        const titleRow = document.createElement("div");
+        titleRow.className = "journal-title-row";
+
+        const title = document.createElement("strong");
+        title.textContent = event.title;
+        titleRow.appendChild(title);
+
+        if (event.hasUpdate) {
+          const updateBadge = document.createElement("span");
+          updateBadge.className = "badge";
+          updateBadge.textContent = "NEW";
+          titleRow.appendChild(updateBadge);
+        }
+
+        if (attendedMap[event.eventId]) {
+          const doneBadge = document.createElement("span");
+          doneBadge.className = "badge";
+          doneBadge.textContent = "기록됨";
+          titleRow.appendChild(doneBadge);
+        }
+
+        const meta = document.createElement("div");
+        meta.className = "journal-meta";
+        const locationText = event.location ? ` · ${event.location}` : "";
+        meta.textContent = `${event.date} · ${event.sourceName}${locationText}`;
+
+        const memoWrap = document.createElement("div");
+        memoWrap.className = "memo-wrap";
+
+        const memoLabel = document.createElement("label");
+        memoLabel.className = "memo-label";
+        memoLabel.textContent = "준비 메모";
+
+        const memoText = document.createElement("textarea");
+        memoText.className = "memo-textarea";
+        memoText.placeholder = "예: 좌석 정보, 준비물, 이동 동선, 함께 갈 사람";
+        memoText.value = getEventMemo(event.eventId);
+
+        const memoStatus = document.createElement("p");
+        memoStatus.className = "memo-status";
+        memoStatus.textContent = "메모 자동 저장";
+
+        memoText.addEventListener("input", () => {
+          saveEventMemo(event.eventId, memoText.value);
+        });
+
+        memoWrap.appendChild(memoLabel);
+        memoWrap.appendChild(memoText);
+        memoWrap.appendChild(memoStatus);
+
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+
+        const openLinkButton = document.createElement("button");
+        openLinkButton.type = "button";
+        openLinkButton.className = "action-btn secondary";
+        openLinkButton.textContent = "관련 링크 열기";
+        openLinkButton.addEventListener("click", () => {
+          if (event.link) window.open(event.link, "_blank", "noopener,noreferrer");
+        });
+
+        const doneButton = document.createElement("button");
+        doneButton.type = "button";
+        doneButton.className = "action-btn primary";
+        doneButton.textContent = "다녀옴으로 이동";
+        doneButton.addEventListener("click", () => {
+          const memo = memoText.value || getEventMemo(event.eventId);
+          upsertAttendedEvent(event, memo);
+          renderSelectedPage();
+          renderVisitedPage();
+          setRefreshState("다녀온 일정으로 기록되었습니다.", "ok");
+        });
+
+        actions.appendChild(openLinkButton);
+        actions.appendChild(doneButton);
+
+        card.appendChild(titleRow);
+        card.appendChild(meta);
+        card.appendChild(memoWrap);
+        card.appendChild(actions);
+        selectedListEl.appendChild(card);
+      });
+    }
+
+    function renderVisitedPage() {
+      const visitedListEl = $("visited-list");
+      const visitedEmptyEl = $("visited-empty");
+      visitedListEl.innerHTML = "";
+
+      const map = loadAttendedLogMap();
+      const items = Object.values(map).sort((a, b) => {
+        const aa = new Date(a.visitedAt || 0).getTime();
+        const bb = new Date(b.visitedAt || 0).getTime();
+        return bb - aa;
+      });
+
+      if (!items.length) {
+        visitedEmptyEl.classList.remove("hidden");
+        return;
+      }
+
+      visitedEmptyEl.classList.add("hidden");
+
+      items.forEach((entry) => {
+        const card = document.createElement("article");
+        card.className = "journal-card";
+
+        const titleRow = document.createElement("div");
+        titleRow.className = "journal-title-row";
+
+        const title = document.createElement("strong");
+        title.textContent = entry.title || "(제목 없음)";
+
+        const doneBadge = document.createElement("span");
+        doneBadge.className = "badge";
+        doneBadge.textContent = "DONE";
+
+        titleRow.appendChild(title);
+        titleRow.appendChild(doneBadge);
+
+        const meta1 = document.createElement("div");
+        meta1.className = "journal-meta";
+        meta1.textContent = `행사 날짜: ${entry.date || "-"}`;
+
+        const visitedAtText = entry.visitedAt ? formatLocalDateTime(new Date(entry.visitedAt).getTime()) : "-";
+        const meta2 = document.createElement("div");
+        meta2.className = "journal-meta";
+        meta2.textContent = `다녀온 기록일: ${visitedAtText}`;
+
+        const meta3 = document.createElement("div");
+        meta3.className = "journal-meta";
+        const locationText = entry.location ? `장소: ${entry.location}` : "장소: 미정";
+        const sourceText = entry.sourceName ? ` · 출처: ${entry.sourceName}` : "";
+        meta3.textContent = `${locationText}${sourceText}`;
+
+        const memoWrap = document.createElement("div");
+        memoWrap.className = "memo-wrap";
+
+        const memoLabel = document.createElement("label");
+        memoLabel.className = "memo-label";
+        memoLabel.textContent = "복기 메모";
+
+        const memoText = document.createElement("textarea");
+        memoText.className = "memo-textarea";
+        memoText.placeholder = "예: 좋았던 점, 아쉬웠던 점, 다음에 챙길 것";
+        memoText.value = String(entry.memo || "");
+
+        const memoStatus = document.createElement("p");
+        memoStatus.className = "memo-status";
+        memoStatus.textContent = "메모 자동 저장";
+
+        memoText.addEventListener("input", () => {
+          updateAttendedMemo(entry.eventId, memoText.value);
+        });
+
+        memoWrap.appendChild(memoLabel);
+        memoWrap.appendChild(memoText);
+        memoWrap.appendChild(memoStatus);
+
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+
+        const openLinkButton = document.createElement("button");
+        openLinkButton.type = "button";
+        openLinkButton.className = "action-btn secondary";
+        openLinkButton.textContent = "관련 링크 열기";
+        openLinkButton.disabled = !entry.link;
+        openLinkButton.addEventListener("click", () => {
+          if (entry.link) window.open(entry.link, "_blank", "noopener,noreferrer");
+        });
+
+        const removeButton = document.createElement("button");
+        removeButton.type = "button";
+        removeButton.className = "action-btn warn";
+        removeButton.textContent = "기록 삭제";
+        removeButton.addEventListener("click", () => {
+          removeAttendedEvent(entry.eventId);
+          renderSelectedPage();
+          renderVisitedPage();
+        });
+
+        actions.appendChild(openLinkButton);
+        actions.appendChild(removeButton);
+
+        card.appendChild(titleRow);
+        card.appendChild(meta1);
+        card.appendChild(meta2);
+        card.appendChild(meta3);
+        card.appendChild(memoWrap);
+        card.appendChild(actions);
+
+        visitedListEl.appendChild(card);
+      });
+    }
+
+    function updateDdayBySelection() {
+      const checked = Array.from(document.querySelectorAll('input[data-schedule-id="1"]'))
+        .filter((input) => input.checked)
+        .map((input) => input.getAttribute("data-event-id") || "")
+        .filter(Boolean);
+
+      saveSelectedEventIds(checked);
+      state.selectedEventIds = checked;
+
+      const selectedEvents = state.scheduleEvents.filter((event) => checked.includes(event.eventId));
+      renderDday(pickNearestEvent(selectedEvents));
+      renderSelectedPage();
+    }
+
+    function renderSchedule(events) {
+      state.scheduleEvents = events;
+
+      const listEl = $("schedule-list");
+      const emptyEl = $("schedule-empty");
+      listEl.innerHTML = "";
+
+      if (!events.length) {
+        state.selectedEventIds = [];
+        emptyEl.classList.remove("hidden");
+        renderDday(null);
+        renderSelectedPage();
+        return;
+      }
+
+      emptyEl.classList.add("hidden");
+      const selectedIds = getValidSelectedEventIds(events);
+      state.selectedEventIds = selectedIds;
+
+      events.forEach((event) => {
+        const itemEl = document.createElement("li");
+        itemEl.className = "selector-item";
+
+        const label = document.createElement("label");
+        label.className = "selector-label";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.setAttribute("data-schedule-id", "1");
+        checkbox.setAttribute("data-event-id", event.eventId);
+        checkbox.checked = selectedIds.includes(event.eventId);
+        checkbox.addEventListener("change", updateDdayBySelection);
+
+        const right = document.createElement("div");
+
+        const titleRow = document.createElement("div");
+        titleRow.className = "selector-title-row";
+
+        const title = document.createElement("span");
+        title.textContent = event.title;
+        titleRow.appendChild(title);
+
+        if (event.hasUpdate) {
+          const badge = document.createElement("span");
+          badge.className = "badge";
+          badge.textContent = "NEW";
+          titleRow.appendChild(badge);
+        }
+
+        const date = document.createElement("div");
+        date.className = "date-row";
+        date.textContent = `${event.date} · ${event.sourceName}`;
+
+        right.appendChild(titleRow);
+        right.appendChild(date);
+
+        label.appendChild(checkbox);
+        label.appendChild(right);
+        itemEl.appendChild(label);
+        listEl.appendChild(itemEl);
+      });
+
+      const selectedEvents = events.filter((event) => selectedIds.includes(event.eventId));
+      renderDday(pickNearestEvent(selectedEvents));
+      renderSelectedPage();
+    }
+
+    function renderSources(sources) {
+      const container = $("sources-container");
+      container.innerHTML = "";
+
+      sources.forEach((source) => {
+        const details = document.createElement("details");
+        details.className = "source-card";
+
+        const summary = document.createElement("summary");
+        summary.className = "source-summary";
+
+        const name = document.createElement("div");
+        name.className = "source-name";
+        name.textContent = `${getSourceEmoji(source.id)} ${source.name}`;
+
+        const meta = document.createElement("div");
+        meta.className = "source-meta";
+
+        if (state.sourceUpdateMap[source.id]) {
+          const updateBadge = document.createElement("span");
+          updateBadge.className = "badge";
+          updateBadge.textContent = "UPDATE";
+          meta.appendChild(updateBadge);
+        }
+
+        const status = document.createElement("div");
+        status.className = `status ${source.status === "ok" ? "ok" : "error"}`;
+        status.textContent = source.status === "ok" ? "정상" : "오류";
+        meta.appendChild(status);
+
+        summary.appendChild(name);
+        summary.appendChild(meta);
+        details.appendChild(summary);
+
+        const body = document.createElement("div");
+        body.className = "source-body";
+
+        if (source.status !== "ok") {
+          const err = document.createElement("p");
+          err.className = "error-text";
+          err.textContent = source.error || "수집 실패";
+          body.appendChild(err);
+        } else {
+          const items = safeItems(source.items);
+
+          if (!items.length) {
+            const empty = document.createElement("p");
+            empty.className = "empty";
+            empty.textContent = "표시할 항목이 없습니다.";
+            body.appendChild(empty);
+          } else {
+            const list = document.createElement("ul");
+            list.className = "item-list";
+
+            items.forEach((item) => {
+              const li = document.createElement("li");
+              li.className = "item";
+
+              const titleLine = document.createElement("div");
+              titleLine.className = "item-title-line";
+
+              const link = document.createElement("a");
+              link.className = "item-link";
+              link.target = "_blank";
+              link.rel = "noreferrer";
+              link.href = item.link || source.url || "#";
+              link.textContent = item.title || "(제목 없음)";
+              titleLine.appendChild(link);
+
+              if (item.has_update) {
+                const badge = document.createElement("span");
+                badge.className = "badge";
+                badge.textContent = "NEW";
+                titleLine.appendChild(badge);
+              }
+
+              const date = document.createElement("div");
+              date.className = "date-row";
+              date.textContent = item.date || "날짜 정보 없음";
+
+              li.appendChild(titleLine);
+              li.appendChild(date);
+              list.appendChild(li);
+            });
+
+            body.appendChild(list);
+          }
+        }
+
+        details.appendChild(body);
+        container.appendChild(details);
+      });
+    }
+
+    function renderGlobalError(message) {
+      const errorEl = $("global-error");
+      errorEl.textContent = message;
+      errorEl.classList.remove("hidden");
+    }
+
+    function clearGlobalError() {
+      const errorEl = $("global-error");
+      errorEl.textContent = "";
+      errorEl.classList.add("hidden");
+    }
+
+    function renderData(data) {
+      if (!data || !Array.isArray(data.sources)) {
+        renderGlobalError("데이터 형식이 올바르지 않습니다.");
+        return;
+      }
+
+      clearGlobalError();
+      renderMeta(data);
+
+      const sources = Array.isArray(data.sources) ? data.sources : [];
+      const events = extractScheduleEvents(sources);
+      renderSchedule(events);
+      renderSources(sources);
+      renderVisitedPage();
+    }
+
+    async function fetchDashboardData() {
+      const response = await fetch(`${CONFIG.DATA_URL}?t=${Date.now()}`, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      return response.json();
+    }
+
+    function shouldAutoRefresh() {
+      const lastFetchedAt = loadLastFetchedAt();
+      if (!lastFetchedAt) return true;
+      return Date.now() - lastFetchedAt >= CONFIG.AUTO_REFRESH_MS;
+    }
+
+    async function refreshData(mode) {
+      const isManual = mode === "manual";
+      setLoading(true);
+      setRefreshState(isManual ? "수동 갱신 중..." : "자동 갱신 중...");
+
+      try {
+        const data = await fetchDashboardData();
+        state.data = data;
+        saveJson(KEYS.CACHE_DATA, data);
+        saveLastFetchedAt(Date.now());
+        state.sourceUpdateMap = buildSourceUpdateMap(data.sources || []);
+        renderData(data);
+
+        const updatedSourceNames = (data.sources || [])
+          .filter((source) => state.sourceUpdateMap[source.id])
+          .map((source) => source.name);
+
+        if (updatedSourceNames.length > 0) {
+          notifyIfNeeded(updatedSourceNames);
+          setRefreshState(`새 업데이트 ${updatedSourceNames.length}건 감지`, "ok");
+        } else {
+          setRefreshState(isManual ? "수동 갱신 완료" : "자동 갱신 완료", "ok");
+        }
+      } catch (error) {
+        console.error(error);
+        if (state.data) {
+          setRefreshState("갱신 실패: 저장된 데이터 유지", "error");
+          renderData(state.data);
+        } else {
+          renderGlobalError(`데이터를 불러오지 못했습니다: ${String(error.message || error)}`);
+          setRefreshState("갱신 실패", "error");
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function loadCachedData() {
+      const cached = loadJson(KEYS.CACHE_DATA, null);
+      if (!cached) return false;
+      state.data = cached;
+      state.sourceUpdateMap = buildSourceUpdateMap(cached.sources || []);
+      renderData(cached);
+      setRefreshState("저장된 데이터 표시 중", "ok");
+      return true;
+    }
+
+    function updateAutoRefreshCountdown() {
+      if (state.isLoading) return;
+      const lastFetchedAt = loadLastFetchedAt();
+      if (!lastFetchedAt) {
+        setRefreshState("자동 갱신 대기 중", "ok");
+        updateNextRefreshMeta();
+        return;
+      }
+
+      const remainMs = Math.max(0, CONFIG.AUTO_REFRESH_MS - (Date.now() - lastFetchedAt));
+      const remainMinutes = Math.ceil(remainMs / 60000);
+      setRefreshState(`자동 갱신까지 약 ${remainMinutes}분`, "ok");
+      updateNextRefreshMeta();
+    }
+
+    function startAutoRefreshLoop() {
+      if (state.autoTimerId) {
+        clearInterval(state.autoTimerId);
+      }
+      state.autoTimerId = window.setInterval(async () => {
+        if (state.isLoading) return;
+        if (shouldAutoRefresh()) {
+          await refreshData("auto");
+        } else {
+          updateAutoRefreshCountdown();
+        }
+      }, CONFIG.AUTO_REFRESH_CHECK_MS);
+    }
+
+    function setActiveTab(tab) {
+      state.activeTab = tab;
+      const tabs = ["dashboard", "selected", "visited"];
+
+      tabs.forEach((name) => {
+        const button = $(`tab-${name}`);
+        const page = $(`page-${name}`);
+
+        if (name === tab) {
+          button.classList.add("active");
+          page.classList.remove("hidden");
+        } else {
+          button.classList.remove("active");
+          page.classList.add("hidden");
+        }
+      });
+    }
+
+    function bindTabEvents() {
+      ["dashboard", "selected", "visited"].forEach((tab) => {
+        $(`tab-${tab}`).addEventListener("click", () => setActiveTab(tab));
+      });
+    }
+
+    function bindEvents() {
+      $("refresh-btn").addEventListener("click", () => refreshData("manual"));
+      $("notify-btn").addEventListener("click", requestNotificationPermission);
+
+      const headerImage = $("header-image");
+      headerImage.addEventListener("error", () => {
+        headerImage.src = CONFIG.HEADER_FALLBACK;
+      });
+
+      bindTabEvents();
+    }
+
+    async function init() {
+      bindEvents();
+      updateNotificationUi();
+      setActiveTab("dashboard");
+
+      const hasCache = loadCachedData();
+      if (!hasCache) {
+        setRefreshState("초기 데이터 로딩 중...");
+      }
+
+      if (!hasCache || shouldAutoRefresh()) {
+        await refreshData("auto");
+      } else {
+        updateAutoRefreshCountdown();
+      }
+
+      startAutoRefreshLoop();
+    }
+
+    init();
+  </script>
+</body>
+</html>
