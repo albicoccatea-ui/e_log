@@ -495,74 +495,13 @@
       </div>
     </section>
 
-    <section class="selector-card">
-      <div class="tab-row">
-        <button id="tab-dashboard" class="tab-btn active" data-tab="dashboard" type="button">대시보드</button>
-        <button id="tab-selected" class="tab-btn" data-tab="selected" type="button">참여 일정</button>
-        <button id="tab-visited" class="tab-btn" data-tab="visited" type="button">다녀온 일정</button>
-      </div>
-    </section>
-
     <section id="global-error" class="global-error hidden"></section>
 
-    <div id="page-dashboard" class="page">
-      <section class="card" id="dday-card">
-        <h2 class="card-title">⏳ 참석 일정 D-day</h2>
-
-        <p id="dday-empty" class="empty">아래 일정에서 참석할 행사를 선택해 주세요.</p>
-
-        <div id="dday-content" class="hidden">
-          <div class="dday-row">
-            <div class="dday-label">행사명</div>
-            <p class="dday-value"><span id="dday-title">-</span> <span id="dday-badge" class="badge hidden">NEW</span></p>
-          </div>
-          <div class="dday-row">
-            <div class="dday-label">날짜</div>
-            <p id="dday-date" class="dday-value">-</p>
-          </div>
-          <div class="dday-row">
-            <div class="dday-label">장소</div>
-            <p id="dday-location" class="dday-value">-</p>
-          </div>
-          <div class="dday-row">
-            <div class="dday-label">디데이</div>
-            <p id="dday-value" class="dday-number">-</p>
-          </div>
-          <div id="dday-related" class="related hidden">
-            추가정보:
-            <a id="dday-related-link" class="related-link" href="#" target="_blank" rel="noreferrer"></a>
-          </div>
-          <p class="hint">여러 개를 선택하면 가장 가까운 일정의 D-day를 보여드립니다.</p>
-        </div>
-      </section>
-
-      <section class="selector-card">
-        <h2 class="card-title">✅ 참석 일정 선택</h2>
-        <p class="hint" style="margin-top:0">체크한 일정은 참여 일정 페이지에 모아서 볼 수 있습니다.</p>
-        <p id="schedule-empty" class="empty hidden">표시 가능한 일정이 없습니다.</p>
-        <ul id="schedule-list" class="selector-list"></ul>
-      </section>
-
+    <section class="selector-card">
+      <h2 class="card-title">📰 소스별 새 소식 / 일정</h2>
+      <p class="hint" style="margin-top:0">각 소스를 펼치면 최신 항목을 확인할 수 있습니다.</p>
       <section id="sources-container" style="display:grid; gap:10px;"></section>
-    </div>
-
-    <div id="page-selected" class="page hidden">
-      <section class="selector-card">
-        <h2 class="card-title">🗂️ 참여할 일정 모아보기</h2>
-        <p class="hint" style="margin-top:0">체크한 일정만 표시됩니다. 메모는 자동 저장됩니다.</p>
-        <p id="selected-empty" class="empty hidden">체크한 일정이 없습니다.</p>
-        <div id="selected-list" class="journal-list"></div>
-      </section>
-    </div>
-
-    <div id="page-visited" class="page hidden">
-      <section class="selector-card">
-        <h2 class="card-title">📔 다녀온 일정 기록</h2>
-        <p class="hint" style="margin-top:0">참여 일정에서 다녀옴으로 이동한 항목입니다. 복기 메모를 남길 수 있습니다.</p>
-        <p id="visited-empty" class="empty hidden">아직 기록된 다녀온 일정이 없습니다.</p>
-        <div id="visited-list" class="journal-list"></div>
-      </section>
-    </div>
+    </section>
   </main>
 
   <script>
@@ -578,20 +517,12 @@
     const KEYS = {
       CACHE_DATA: "elogMobile.cacheData.v1",
       LAST_FETCHED_AT: "elogMobile.lastFetchedAt.v1",
-      SELECTED_EVENT_IDS: "elogMobile.selectedEventIds.v1",
-      SOURCE_LATEST_MAP: "elogMobile.sourceLatestMap.v1",
-      EVENT_MEMO_MAP: "elogMobile.eventMemoMap.v1",
-      ATTENDED_LOG_MAP: "elogMobile.attendedLogMap.v1"
+      SOURCE_LATEST_MAP: "elogMobile.sourceLatestMap.v1"
     };
-
-    const CALENDAR_SOURCE_IDS = new Set(["calendar_endoh", "calendar_jam"]);
 
     const state = {
       data: null,
       sourceUpdateMap: {},
-      scheduleEvents: [],
-      selectedEventIds: [],
-      activeTab: "dashboard",
       isLoading: false,
       autoTimerId: null
     };
@@ -641,44 +572,6 @@
       });
     }
 
-    function getDayStart(date) {
-      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    }
-
-    function parseEventDate(event) {
-      if (event.event_at) {
-        const parsed = new Date(event.event_at);
-        if (!Number.isNaN(parsed.getTime())) return parsed;
-      }
-      const match = String(event.date || "").match(/(\d{4}-\d{2}-\d{2})(?:\s+(\d{2}:\d{2}))?/);
-      if (match) {
-        const timePart = match[2] || "00:00";
-        const parsed = new Date(`${match[1]}T${timePart}:00+09:00`);
-        if (!Number.isNaN(parsed.getTime())) return parsed;
-      }
-      return null;
-    }
-
-    function inferLocationFromTitle(title) {
-      const value = String(title || "");
-      const atMatch = value.match(/[＠@]\s*([^【】「」\[\]（）()|]+)$/);
-      if (atMatch && atMatch[1]) return atMatch[1].trim();
-
-      const inMatch = value.match(/\bin\s+([^\-|【】「」\[\]（）()]+)/i);
-      if (inMatch && inMatch[1]) return inMatch[1].replace(/\bvol\.?\s*\d+.*/i, "").trim();
-      return "";
-    }
-
-    function getDdayText(date) {
-      const today = new Date();
-      const todayStart = getDayStart(today);
-      const targetStart = getDayStart(date);
-      const diffDays = Math.round((targetStart - todayStart) / 86400000);
-      if (diffDays > 0) return `D-${diffDays}`;
-      if (diffDays === 0) return "D-DAY";
-      return `D+${Math.abs(diffDays)}`;
-    }
-
     function getSourceEmoji(sourceId) {
       const map = {
         official_news: "📰",
@@ -720,132 +613,6 @@
 
       saveJson(KEYS.SOURCE_LATEST_MAP, nextMap);
       return updateMap;
-    }
-
-    function extractScheduleEvents(sources) {
-      const events = [];
-      sources.forEach((source) => {
-        if (!CALENDAR_SOURCE_IDS.has(source.id) || source.status !== "ok") return;
-        (source.items || []).forEach((item, index) => {
-          const parsedDate = parseEventDate(item);
-          const location = String(item.location || "").trim() || inferLocationFromTitle(item.title || "");
-          const eventId = item.event_id || `${source.id}-${index}-${item.title || "event"}`;
-          events.push({
-            eventId,
-            title: item.title || "(제목 없음)",
-            date: item.date || "날짜 정보 없음",
-            location,
-            event_at: item.event_at || "",
-            link: item.link || source.url || "",
-            sourceName: source.name || "",
-            sourceId: source.id,
-            hasUpdate: Boolean(item.has_update),
-            related: Array.isArray(item.related) ? item.related : [],
-            parsedDate
-          });
-        });
-      });
-
-      events.sort((a, b) => {
-        if (!a.parsedDate && !b.parsedDate) return 0;
-        if (!a.parsedDate) return 1;
-        if (!b.parsedDate) return -1;
-        return a.parsedDate.getTime() - b.parsedDate.getTime();
-      });
-
-      return events;
-    }
-
-    function loadSelectedEventIds() {
-      const parsed = loadJson(KEYS.SELECTED_EVENT_IDS, []);
-      return Array.isArray(parsed) ? parsed : [];
-    }
-
-    function saveSelectedEventIds(ids) {
-      saveJson(KEYS.SELECTED_EVENT_IDS, ids);
-    }
-
-    function getValidSelectedEventIds(events) {
-      const loaded = loadSelectedEventIds();
-      const valid = loaded.filter((id) => events.some((event) => event.eventId === id));
-      if (loaded.length !== valid.length) saveSelectedEventIds(valid);
-      return valid;
-    }
-
-    function loadEventMemoMap() {
-      const parsed = loadJson(KEYS.EVENT_MEMO_MAP, {});
-      return parsed && typeof parsed === "object" ? parsed : {};
-    }
-
-    function saveEventMemo(eventId, value) {
-      const map = loadEventMemoMap();
-      map[eventId] = value;
-      saveJson(KEYS.EVENT_MEMO_MAP, map);
-    }
-
-    function getEventMemo(eventId) {
-      const map = loadEventMemoMap();
-      return String(map[eventId] || "");
-    }
-
-    function loadAttendedLogMap() {
-      const parsed = loadJson(KEYS.ATTENDED_LOG_MAP, {});
-      return parsed && typeof parsed === "object" ? parsed : {};
-    }
-
-    function saveAttendedLogMap(map) {
-      saveJson(KEYS.ATTENDED_LOG_MAP, map);
-    }
-
-    function upsertAttendedEvent(event, memoText) {
-      const map = loadAttendedLogMap();
-      const nowIso = new Date().toISOString();
-      const prev = map[event.eventId] || {};
-      map[event.eventId] = {
-        eventId: event.eventId,
-        title: event.title,
-        date: event.date,
-        location: event.location || "",
-        sourceName: event.sourceName || "",
-        link: event.link || "",
-        visitedAt: prev.visitedAt || nowIso,
-        memo: memoText,
-        updatedAt: nowIso
-      };
-      saveAttendedLogMap(map);
-    }
-
-    function updateAttendedMemo(eventId, memoText) {
-      const map = loadAttendedLogMap();
-      if (!map[eventId]) return;
-      map[eventId].memo = memoText;
-      map[eventId].updatedAt = new Date().toISOString();
-      saveAttendedLogMap(map);
-    }
-
-    function removeAttendedEvent(eventId) {
-      const map = loadAttendedLogMap();
-      delete map[eventId];
-      saveAttendedLogMap(map);
-    }
-
-    function pickNearestEvent(selectedEvents) {
-      if (!selectedEvents.length) return null;
-
-      const todayStart = getDayStart(new Date());
-
-      const upcoming = selectedEvents
-        .filter((event) => event.parsedDate)
-        .filter((event) => getDayStart(event.parsedDate).getTime() >= todayStart.getTime())
-        .sort((a, b) => a.parsedDate.getTime() - b.parsedDate.getTime());
-
-      if (upcoming.length > 0) return upcoming[0];
-
-      const dated = selectedEvents
-        .filter((event) => event.parsedDate)
-        .sort((a, b) => b.parsedDate.getTime() - a.parsedDate.getTime());
-
-      return dated[0] || selectedEvents[0];
     }
 
     function setRefreshState(message, type = "idle") {
@@ -951,346 +718,6 @@
       }
       const next = fetchedAt + CONFIG.AUTO_REFRESH_MS;
       $("meta-next").textContent = `다음 자동 갱신 예정: ${formatLocalDateTime(next)}`;
-    }
-
-    function renderDday(nearestEvent) {
-      const emptyEl = $("dday-empty");
-      const contentEl = $("dday-content");
-      const badgeEl = $("dday-badge");
-      const relatedWrap = $("dday-related");
-      const relatedLink = $("dday-related-link");
-
-      if (!nearestEvent) {
-        emptyEl.classList.remove("hidden");
-        contentEl.classList.add("hidden");
-        return;
-      }
-
-      emptyEl.classList.add("hidden");
-      contentEl.classList.remove("hidden");
-      $("dday-title").textContent = nearestEvent.title || "-";
-      $("dday-date").textContent = nearestEvent.date || "-";
-      $("dday-location").textContent = nearestEvent.location || "장소 미정";
-      $("dday-value").textContent = nearestEvent.parsedDate ? getDdayText(nearestEvent.parsedDate) : "-";
-
-      if (nearestEvent.hasUpdate) {
-        badgeEl.classList.remove("hidden");
-      } else {
-        badgeEl.classList.add("hidden");
-      }
-
-      const related = nearestEvent.related && nearestEvent.related.length > 0 ? nearestEvent.related[0] : null;
-      if (related && related.link) {
-        relatedWrap.classList.remove("hidden");
-        relatedLink.href = related.link;
-        relatedLink.textContent = related.title || "관련 정보 보기";
-      } else {
-        relatedWrap.classList.add("hidden");
-        relatedLink.href = "#";
-        relatedLink.textContent = "";
-      }
-    }
-
-    function renderSelectedPage() {
-      const selectedListEl = $("selected-list");
-      const selectedEmptyEl = $("selected-empty");
-      selectedListEl.innerHTML = "";
-
-      const attendedMap = loadAttendedLogMap();
-      const selectedEvents = state.scheduleEvents
-        .filter((event) => state.selectedEventIds.includes(event.eventId))
-        .sort((a, b) => {
-          if (!a.parsedDate && !b.parsedDate) return 0;
-          if (!a.parsedDate) return 1;
-          if (!b.parsedDate) return -1;
-          return a.parsedDate.getTime() - b.parsedDate.getTime();
-        });
-
-      if (!selectedEvents.length) {
-        selectedEmptyEl.classList.remove("hidden");
-        return;
-      }
-
-      selectedEmptyEl.classList.add("hidden");
-
-      selectedEvents.forEach((event) => {
-        const card = document.createElement("article");
-        card.className = "journal-card";
-
-        const titleRow = document.createElement("div");
-        titleRow.className = "journal-title-row";
-
-        const title = document.createElement("strong");
-        title.textContent = event.title;
-        titleRow.appendChild(title);
-
-        if (event.hasUpdate) {
-          const updateBadge = document.createElement("span");
-          updateBadge.className = "badge";
-          updateBadge.textContent = "NEW";
-          titleRow.appendChild(updateBadge);
-        }
-
-        if (attendedMap[event.eventId]) {
-          const doneBadge = document.createElement("span");
-          doneBadge.className = "badge";
-          doneBadge.textContent = "기록됨";
-          titleRow.appendChild(doneBadge);
-        }
-
-        const meta = document.createElement("div");
-        meta.className = "journal-meta";
-        const locationText = event.location ? ` · ${event.location}` : "";
-        meta.textContent = `${event.date} · ${event.sourceName}${locationText}`;
-
-        const memoWrap = document.createElement("div");
-        memoWrap.className = "memo-wrap";
-
-        const memoLabel = document.createElement("label");
-        memoLabel.className = "memo-label";
-        memoLabel.textContent = "준비 메모";
-
-        const memoText = document.createElement("textarea");
-        memoText.className = "memo-textarea";
-        memoText.placeholder = "예: 좌석 정보, 준비물, 이동 동선, 함께 갈 사람";
-        memoText.value = getEventMemo(event.eventId);
-
-        const memoStatus = document.createElement("p");
-        memoStatus.className = "memo-status";
-        memoStatus.textContent = "메모 자동 저장";
-
-        memoText.addEventListener("input", () => {
-          saveEventMemo(event.eventId, memoText.value);
-        });
-
-        memoWrap.appendChild(memoLabel);
-        memoWrap.appendChild(memoText);
-        memoWrap.appendChild(memoStatus);
-
-        const actions = document.createElement("div");
-        actions.className = "card-actions";
-
-        const openLinkButton = document.createElement("button");
-        openLinkButton.type = "button";
-        openLinkButton.className = "action-btn secondary";
-        openLinkButton.textContent = "관련 링크 열기";
-        openLinkButton.addEventListener("click", () => {
-          if (event.link) window.open(event.link, "_blank", "noopener,noreferrer");
-        });
-
-        const doneButton = document.createElement("button");
-        doneButton.type = "button";
-        doneButton.className = "action-btn primary";
-        doneButton.textContent = "다녀옴으로 이동";
-        doneButton.addEventListener("click", () => {
-          const memo = memoText.value || getEventMemo(event.eventId);
-          upsertAttendedEvent(event, memo);
-          renderSelectedPage();
-          renderVisitedPage();
-          setRefreshState("다녀온 일정으로 기록되었습니다.", "ok");
-        });
-
-        actions.appendChild(openLinkButton);
-        actions.appendChild(doneButton);
-
-        card.appendChild(titleRow);
-        card.appendChild(meta);
-        card.appendChild(memoWrap);
-        card.appendChild(actions);
-        selectedListEl.appendChild(card);
-      });
-    }
-
-    function renderVisitedPage() {
-      const visitedListEl = $("visited-list");
-      const visitedEmptyEl = $("visited-empty");
-      visitedListEl.innerHTML = "";
-
-      const map = loadAttendedLogMap();
-      const items = Object.values(map).sort((a, b) => {
-        const aa = new Date(a.visitedAt || 0).getTime();
-        const bb = new Date(b.visitedAt || 0).getTime();
-        return bb - aa;
-      });
-
-      if (!items.length) {
-        visitedEmptyEl.classList.remove("hidden");
-        return;
-      }
-
-      visitedEmptyEl.classList.add("hidden");
-
-      items.forEach((entry) => {
-        const card = document.createElement("article");
-        card.className = "journal-card";
-
-        const titleRow = document.createElement("div");
-        titleRow.className = "journal-title-row";
-
-        const title = document.createElement("strong");
-        title.textContent = entry.title || "(제목 없음)";
-
-        const doneBadge = document.createElement("span");
-        doneBadge.className = "badge";
-        doneBadge.textContent = "DONE";
-
-        titleRow.appendChild(title);
-        titleRow.appendChild(doneBadge);
-
-        const meta1 = document.createElement("div");
-        meta1.className = "journal-meta";
-        meta1.textContent = `행사 날짜: ${entry.date || "-"}`;
-
-        const visitedAtText = entry.visitedAt ? formatLocalDateTime(new Date(entry.visitedAt).getTime()) : "-";
-        const meta2 = document.createElement("div");
-        meta2.className = "journal-meta";
-        meta2.textContent = `다녀온 기록일: ${visitedAtText}`;
-
-        const meta3 = document.createElement("div");
-        meta3.className = "journal-meta";
-        const locationText = entry.location ? `장소: ${entry.location}` : "장소: 미정";
-        const sourceText = entry.sourceName ? ` · 출처: ${entry.sourceName}` : "";
-        meta3.textContent = `${locationText}${sourceText}`;
-
-        const memoWrap = document.createElement("div");
-        memoWrap.className = "memo-wrap";
-
-        const memoLabel = document.createElement("label");
-        memoLabel.className = "memo-label";
-        memoLabel.textContent = "복기 메모";
-
-        const memoText = document.createElement("textarea");
-        memoText.className = "memo-textarea";
-        memoText.placeholder = "예: 좋았던 점, 아쉬웠던 점, 다음에 챙길 것";
-        memoText.value = String(entry.memo || "");
-
-        const memoStatus = document.createElement("p");
-        memoStatus.className = "memo-status";
-        memoStatus.textContent = "메모 자동 저장";
-
-        memoText.addEventListener("input", () => {
-          updateAttendedMemo(entry.eventId, memoText.value);
-        });
-
-        memoWrap.appendChild(memoLabel);
-        memoWrap.appendChild(memoText);
-        memoWrap.appendChild(memoStatus);
-
-        const actions = document.createElement("div");
-        actions.className = "card-actions";
-
-        const openLinkButton = document.createElement("button");
-        openLinkButton.type = "button";
-        openLinkButton.className = "action-btn secondary";
-        openLinkButton.textContent = "관련 링크 열기";
-        openLinkButton.disabled = !entry.link;
-        openLinkButton.addEventListener("click", () => {
-          if (entry.link) window.open(entry.link, "_blank", "noopener,noreferrer");
-        });
-
-        const removeButton = document.createElement("button");
-        removeButton.type = "button";
-        removeButton.className = "action-btn warn";
-        removeButton.textContent = "기록 삭제";
-        removeButton.addEventListener("click", () => {
-          removeAttendedEvent(entry.eventId);
-          renderSelectedPage();
-          renderVisitedPage();
-        });
-
-        actions.appendChild(openLinkButton);
-        actions.appendChild(removeButton);
-
-        card.appendChild(titleRow);
-        card.appendChild(meta1);
-        card.appendChild(meta2);
-        card.appendChild(meta3);
-        card.appendChild(memoWrap);
-        card.appendChild(actions);
-
-        visitedListEl.appendChild(card);
-      });
-    }
-
-    function updateDdayBySelection() {
-      const checked = Array.from(document.querySelectorAll('input[data-schedule-id="1"]'))
-        .filter((input) => input.checked)
-        .map((input) => input.getAttribute("data-event-id") || "")
-        .filter(Boolean);
-
-      saveSelectedEventIds(checked);
-      state.selectedEventIds = checked;
-
-      const selectedEvents = state.scheduleEvents.filter((event) => checked.includes(event.eventId));
-      renderDday(pickNearestEvent(selectedEvents));
-      renderSelectedPage();
-    }
-
-    function renderSchedule(events) {
-      state.scheduleEvents = events;
-
-      const listEl = $("schedule-list");
-      const emptyEl = $("schedule-empty");
-      listEl.innerHTML = "";
-
-      if (!events.length) {
-        state.selectedEventIds = [];
-        emptyEl.classList.remove("hidden");
-        renderDday(null);
-        renderSelectedPage();
-        return;
-      }
-
-      emptyEl.classList.add("hidden");
-      const selectedIds = getValidSelectedEventIds(events);
-      state.selectedEventIds = selectedIds;
-
-      events.forEach((event) => {
-        const itemEl = document.createElement("li");
-        itemEl.className = "selector-item";
-
-        const label = document.createElement("label");
-        label.className = "selector-label";
-
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.setAttribute("data-schedule-id", "1");
-        checkbox.setAttribute("data-event-id", event.eventId);
-        checkbox.checked = selectedIds.includes(event.eventId);
-        checkbox.addEventListener("change", updateDdayBySelection);
-
-        const right = document.createElement("div");
-
-        const titleRow = document.createElement("div");
-        titleRow.className = "selector-title-row";
-
-        const title = document.createElement("span");
-        title.textContent = event.title;
-        titleRow.appendChild(title);
-
-        if (event.hasUpdate) {
-          const badge = document.createElement("span");
-          badge.className = "badge";
-          badge.textContent = "NEW";
-          titleRow.appendChild(badge);
-        }
-
-        const date = document.createElement("div");
-        date.className = "date-row";
-        date.textContent = `${event.date} · ${event.sourceName}`;
-
-        right.appendChild(titleRow);
-        right.appendChild(date);
-
-        label.appendChild(checkbox);
-        label.appendChild(right);
-        itemEl.appendChild(label);
-        listEl.appendChild(itemEl);
-      });
-
-      const selectedEvents = events.filter((event) => selectedIds.includes(event.eventId));
-      renderDday(pickNearestEvent(selectedEvents));
-      renderSelectedPage();
     }
 
     function renderSources(sources) {
@@ -1409,10 +836,7 @@
       renderMeta(data);
 
       const sources = Array.isArray(data.sources) ? data.sources : [];
-      const events = extractScheduleEvents(sources);
-      renderSchedule(events);
       renderSources(sources);
-      renderVisitedPage();
     }
 
     async function fetchDashboardData() {
@@ -1505,30 +929,6 @@
       }, CONFIG.AUTO_REFRESH_CHECK_MS);
     }
 
-    function setActiveTab(tab) {
-      state.activeTab = tab;
-      const tabs = ["dashboard", "selected", "visited"];
-
-      tabs.forEach((name) => {
-        const button = $(`tab-${name}`);
-        const page = $(`page-${name}`);
-
-        if (name === tab) {
-          button.classList.add("active");
-          page.classList.remove("hidden");
-        } else {
-          button.classList.remove("active");
-          page.classList.add("hidden");
-        }
-      });
-    }
-
-    function bindTabEvents() {
-      ["dashboard", "selected", "visited"].forEach((tab) => {
-        $(`tab-${tab}`).addEventListener("click", () => setActiveTab(tab));
-      });
-    }
-
     function bindEvents() {
       $("refresh-btn").addEventListener("click", () => refreshData("manual"));
       $("notify-btn").addEventListener("click", requestNotificationPermission);
@@ -1537,14 +937,11 @@
       headerImage.addEventListener("error", () => {
         headerImage.src = CONFIG.HEADER_FALLBACK;
       });
-
-      bindTabEvents();
     }
 
     async function init() {
       bindEvents();
       updateNotificationUi();
-      setActiveTab("dashboard");
 
       const hasCache = loadCachedData();
       if (!hasCache) {
